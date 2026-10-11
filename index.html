@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoblastCo Indonesia - Advanced Cleaning & Steel Profiling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tech: {
+                            bg: '#050a14',
+                            panel: '#0a1122',
+                            orange: '#f97316', // Based on reference image
+                            orangeGlow: 'rgba(249, 115, 22, 0.5)',
+                            cyan: '#06b6d4', // Based on reference image
+                            cyanGlow: 'rgba(6, 182, 212, 0.4)',
+                            border: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Rajdhani', 'Inter', 'sans-serif'], // Rajdhani gives a good tech vibe
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #050a14; /* Deep tech background */
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Tech Grid Background */
+        .tech-grid-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            background-image: 
+                linear-gradient(to right, rgba(30, 41, 59, 0.3) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.3) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Subtle Ambient Glow */
+        .ambient-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* HUD Style Panels */
+        .hud-panel {
+            background: rgba(10, 17, 34, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Corner Accents for Panels */
+        .hud-corners::before, .hud-corners::after,
+        .hud-corners span::before, .hud-corners span::after {
+            content: ''; position: absolute; width: 15px; height: 15px; border: 2px solid transparent; pointer-events: none; z-index: 10;
+        }
+        .hud-corners::before { top: -1px; left: -1px; border-top-color: #06b6d4; border-left-color: #06b6d4; }
+        .hud-corners::after { top: -1px; right: -1px; border-top-color: #06b6d4; border-right-color: #06b6d4; }
+        .hud-corners span::before { bottom: -1px; left: -1px; border-bottom-color: #06b6d4; border-left-color: #06b6d4; }
+        .hud-corners span::after { bottom: -1px; right: -1px; border-bottom-color: #06b6d4; border-right-color: #06b6d4; }
+
+        .hud-corners-orange::before { border-top-color: #f97316; border-left-color: #f97316; }
+        .hud-corners-orange::after { border-top-color: #f97316; border-right-color: #f97316; }
+        .hud-corners-orange span::before { border-bottom-color: #f97316; border-left-color: #f97316; }
+        .hud-corners-orange span::after { border-bottom-color: #f97316; border-right-color: #f97316; }
+
+        /* Buttons */
+        .btn-primary {
+            background: transparent;
+            color: white;
+            border: 1px solid #f97316;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.3), inset 0 0 10px rgba(249, 115, 22, 0.1);
+        }
+        .btn-primary:hover {
+            background: rgba(249, 115, 22, 0.15);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.6), inset 0 0 15px rgba(249, 115, 22, 0.3);
+            text-shadow: 0 0 5px white;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            color: #06b6d4;
+        }
+
+        /* Typography Styles */
+        h1, h2, h3, h4, .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        .text-glow-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.7); }
+        .text-glow-cyan { text-shadow: 0 0 10px rgba(6, 182, 212, 0.7); }
+
+        /* Animations */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        
+        .slide-hidden { opacity: 0; pointer-events: none; z-index: 10; transition: opacity 0.5s ease; position: absolute; }
+        .slide-active { opacity: 1; pointer-events: auto; z-index: 20; transition: opacity 0.5s ease; position: relative; }
+        
+        @keyframes progress-load { 0% { width: 0%; } 100% { width: 100%; } }
+        .progress-bar-fill { height: 100%; background: #06b6d4; width: 0%; box-shadow: 0 0 10px #06b6d4; }
+        .progress-bar-fill.active { animation: progress-load 5s linear forwards; }
+
+        /* Glowing Divider Lines */
+        .glow-line-orange {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #f97316, transparent);
+            box-shadow: 0 0 10px #f97316;
+        }
+        .glow-line-cyan {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+            box-shadow: 0 0 8px #06b6d4;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050a14; border-left: 1px solid #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border: 1px solid #06b6d4; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+    </style>
+</head>
+<body class="antialiased selection:bg-tech-cyan selection:text-white">
+
+    <div class="tech-grid-bg"></div>
+    <div class="ambient-glow"></div>
+
+    <nav class="fixed w-full z-50 top-0 transition-all duration-300 hud-panel border-b-0 border-t-0 border-x-0" style="border-bottom: 1px solid rgba(6,182,212,0.3);">
+        <div class="max-w-[90rem] mx-auto px-6 py-3 flex justify-between items-center">
+            
+            <!-- Logo area based on Image 2 -->
+            <a href="#" class="flex flex-col items-center">
+                  <img src="img/00.png.png" alt="S.C.I Logo" class="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]">
+            </a>
+
+            <!-- Navigation Links -->
+            <div class="hidden lg:flex space-x-10 text-sm font-bold text-gray-400 tracking-wider font-rajdhani uppercase">
+                <a href="#home" class="text-tech-orange border-b-2 border-tech-orange pb-1 hover:text-white transition-colors">Home</a>
+                <a href="#about" class="hover:text-tech-orange hover:border-b-2 hover:border-tech-orange pb-1 transition-all">About Us</a>
+                <a href="#logistics" class="hover:text-tech-orange hover:border-b-2 hover:border-tech-orange pb-1 transition-all">Logistics</a>
+                <a href="#our-services" class="hover:text-tech-orange hover:border-b-2 hover:border-tech-orange pb-1 transition-all">Products</a>
+                <a href="#faq" class="hover:text-tech-orange hover:border-b-2 hover:border-tech-orange pb-1 transition-all">FAQ</a>
+                <a href="#contact" class="hover:text-tech-orange hover:border-b-2 hover:border-tech-orange pb-1 transition-all">Contact Us</a>
+            </div>
+
+            <!-- Contact Block (Right Side) based on Image 2 -->
+            <div class="hidden lg:flex items-center gap-3 border-l border-tech-border pl-6">
+                <div class="text-tech-orange">
+                    <svg class="w-8 h-8 drop-shadow-[0_0_5px_rgba(249,115,22,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xs text-gray-400 font-rajdhani tracking-widest">HAVE ANY QUESTIONS?</span>
+                    <span class="text-sm text-white font-bold tracking-wider">info@soblastco-indonesia.com</span>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="lg:hidden text-tech-cyan p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section id="home" class="min-h-screen flex items-center pt-24 pb-12 px-6 relative z-10 overflow-hidden">
+            <!-- Simulated HUD background elements -->
+            <div class="absolute inset-0 pointer-events-none z-0 flex justify-between px-10 items-center opacity-30">
+                 <div class="w-32 h-64 border-l border-t border-tech-cyan"></div>
+                 <div class="w-32 h-64 border-r border-b border-tech-cyan"></div>
+            </div>
+
+            <div class="max-w-[90rem] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center reveal z-10">
+                
+                <!-- Hero Text -->
+                <div class="text-left lg:col-span-7 pt-10">
+                    <div class="inline-flex items-center gap-2 px-4 py-1 border border-tech-cyan/50 text-tech-cyan text-xs font-bold mb-6 tracking-[0.2em] font-rajdhani bg-tech-cyan/5 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                        <span class="w-2 h-2 bg-tech-cyan rounded-full animate-pulse"></span>
+                        YOUR DEDICATED PARTNER
+                    </div>
+                    
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1] text-white">
+                        ADVANCED <span class="text-tech-orange text-glow-orange">CLEANING</span> <br/> & BLASTING
+                        <span class="block text-3xl md:text-4xl text-gray-300 mt-2 font-light tracking-wide">FOR YOUR BUSINESS</span>
+                    </h1>
+                    
+                    <p class="text-md text-gray-400 mb-10 max-w-xl font-inter leading-relaxed border-l-2 border-tech-cyan pl-4">
+                        We could do new steel profiling to Corrosion Institute standard or refurbishing your equipment into the next level. Built for extreme industrial conditions.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-6 font-rajdhani font-bold tracking-wider">
+                        <a href="#our-services" class="btn-primary px-8 py-3 rounded-full flex items-center justify-center gap-2 text-lg">
+                            Learn More 
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                        <a href="#contact" class="btn-secondary px-8 py-3 rounded-full flex items-center justify-center text-lg text-gray-300 uppercase">
+                            Explore Services
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hero Image with HUD framing -->
+                <div class="relative w-full h-[400px] md:h-[500px] lg:h-[600px] lg:col-span-5 flex justify-center items-center">
+                    <!-- HUD Frame -->
+                    <div class="absolute inset-0 hud-panel hud-corners p-2 rounded-lg opacity-80"><span></span></div>
+                    
+                    <!-- decorative data lines -->
+                    <div class="absolute -left-12 top-1/4 text-[10px] text-tech-cyan font-mono opacity-50 hidden md:block">
+                        COORD<br>9002.5<br>1407.08
+                    </div>
+                    <div class="absolute -right-8 bottom-1/4 text-[10px] text-tech-orange font-mono opacity-50 hidden md:block border-l border-tech-orange pl-2">
+                        IMPACT: 100%<br>ABRASION: ACT
+                    </div>
+
+                    <img src="img/awl.jpg" alt="Industrial Blasting" class="w-full h-full object-cover rounded shadow-[0_0_30px_rgba(0,0,0,0.8)] border border-tech-border relative z-10 filter contrast-125 saturate-110">
+                    
+                    <!-- Overlay Scanline effect -->
+                    <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:100%_4px] z-20 pointer-events-none rounded"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="glow-line-cyan opacity-30"></div>
+
+        <section class="py-12 relative z-10 bg-tech-panel/50 border-y border-tech-border">
+            <div class="max-w-[90rem] mx-auto text-center reveal">
+                <div class="flex items-center justify-center gap-4 mb-8">
+                    <div class="h-px w-12 bg-tech-cyan/50"></div>
+                    <h4 class="text-xs font-bold text-tech-cyan tracking-[0.3em] uppercase font-rajdhani">System Integration Partners</h4>
+                    <div class="h-px w-12 bg-tech-cyan/50"></div>
+                </div>
+                
+                <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+                    <!-- Using same placeholder for clients as original, styled to fit -->
+                    <img src="img/h.webp" alt="Client 1" class="h-10 md:h-14 w-auto object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                    <img src="img/h.webp" alt="Client 2" class="h-10 md:h-14 w-auto object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                    <img src="img/h.webp" alt="Client 3" class="h-10 md:h-14 w-auto object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                    <img src="img/h.webp" alt="Client 4" class="h-10 md:h-14 w-auto object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                    <img src="img/h.webp" alt="Client 5" class="h-10 md:h-14 w-auto object-contain drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-24 px-6 relative z-10">
+            <div class="max-w-[90rem] mx-auto mb-16 text-center reveal">
+                <h2 class="text-4xl md:text-5xl font-bold mb-2 tracking-tight font-rajdhani uppercase">Company <span class="text-tech-cyan">Database</span></h2>
+                <div class="h-1 w-24 bg-tech-orange mx-auto shadow-[0_0_10px_rgba(249,115,22,0.8)] mb-4"></div>
+                <p class="text-gray-400 text-sm font-mono max-w-2xl mx-auto uppercase tracking-widest">// Accessing historical records and achievements</p>
+            </div>
+            
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-start reveal">
+                
+                <!-- Tab Buttons (Tech Style) -->
+                <div class="md:col-span-4 flex flex-col space-y-3 font-rajdhani font-bold tracking-wider">
+                    <button onclick="switchTab('established')" id="btn-established" class="tab-btn w-full text-left text-lg px-6 py-4 transition-all duration-300 border border-tech-orange bg-tech-orange/10 text-tech-orange shadow-[inset_4px_0_0_#f97316]">
+                        [01] ESTABLISHED
+                    </button>
+                    <button onclick="switchTab('award')" id="btn-award" class="tab-btn w-full text-left text-lg px-6 py-4 transition-all duration-300 border border-tech-border bg-transparent text-gray-400 hover:border-tech-cyan hover:text-tech-cyan">
+                        [02] OUR AWARD
+                    </button>
+                    <button onclick="switchTab('history')" id="btn-history" class="tab-btn w-full text-left text-lg px-6 py-4 transition-all duration-300 border border-tech-border bg-transparent text-gray-400 hover:border-tech-cyan hover:text-tech-cyan">
+                        [03] COMPANY HISTORY
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="md:col-span-8 hud-panel hud-corners p-8 md:p-10 min-h-[300px] flex flex-col justify-center relative">
+                    <span></span>
+                    
+                    <div class="absolute top-4 right-4 flex gap-1">
+                        <div class="w-2 h-2 bg-tech-orange rounded-sm"></div>
+                        <div class="w-2 h-2 bg-tech-cyan rounded-sm"></div>
+                    </div>
+
+                    <div id="content-established" class="tab-content w-full animate-tab">
+                        <h3 class="text-2xl font-bold text-white mb-4 uppercase font-rajdhani border-b border-tech-border pb-2 inline-block">
+                            <span class="text-tech-orange mr-2">>></span> Initialization: 2010
+                        </h3>
+                        <div class="text-gray-300 text-md leading-relaxed font-inter space-y-4">
+                            <p>SCI was established in Indonesia in 2010 to fulfill the market demands of surface preparation company in mining, oil, gas and construction.</p>
+                            <p>Originated from Houston, Texas, USA, the Sodablast Systems planned expansion in Indonesia through SCI. Located in Surabaya, SCI head office provide services ranged from cleaning and paint removal, pre-coating preparation, and restoration for multiple type of surface.</p>
+                        </div>
+                    </div>
+
+                    <div id="content-award" class="tab-content w-full hidden animate-tab">
+                        <h3 class="text-2xl font-bold text-white mb-4 uppercase font-rajdhani border-b border-tech-border pb-2 inline-block">
+                            <span class="text-tech-orange mr-2">>></span> Recognition: 2012
+                        </h3>
+                        <div class="text-gray-300 text-md leading-relaxed font-inter space-y-4">
+                            <p>Within the improvement of the technology, surface preparation process requires both environmentally friendly and safety. SCI is very aware to this situation.</p>
+                            <p>In January 2012, SCI was awarded the distributorship of Dustless Blasting, which is being used widely and very popular in the surface preparation industry.</p>
+                        </div>
+                    </div>
+
+                    <div id="content-history" class="tab-content w-full hidden animate-tab">
+                        <h3 class="text-2xl font-bold text-white mb-4 uppercase font-rajdhani border-b border-tech-border pb-2 inline-block">
+                            <span class="text-tech-orange mr-2">>></span> Tech Upgrade: 2014
+                        </h3>
+                        <div class="text-gray-300 text-md leading-relaxed font-inter space-y-4">
+                            <p>Following our initial success and adapting to market needs, we expanded our technological solutions.</p>
+                            <p>Later in 2014, with demands of low maintenance and ease of mobility, SCI was introduced to IBIX pro series. A simple and robust Italian machine that has better safety and features than other surface preparation equipment, low cost maintenance and easy to transport.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="logistics" class="py-24 px-6 relative z-10 bg-tech-bg bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-tech-panel to-tech-bg border-y border-tech-border">
+            <div class="max-w-[90rem] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center reveal">
+                
+                <div class="order-2 lg:order-1 relative w-full h-[450px] hud-panel hud-corners p-2">
+                    <span></span>
+                    <img src="img/l.jpeg" alt="Logistics Data" class="w-full h-full object-cover filter contrast-125 sepia-[.2] hue-rotate-[180deg]">
+                    
+                    <!-- Tech overlay elements -->
+                    <div class="absolute bottom-6 left-6 hud-panel border-tech-orange p-4 text-center border-l-4">
+                        <div class="text-3xl font-rajdhani font-bold text-white mb-1"><span class="counter" data-target="150">0</span>K+</div>
+                        <div class="text-tech-orange text-[10px] font-mono uppercase tracking-widest">Units Deployed</div>
+                    </div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-tech-cyan rounded-full animate-ping opacity-20"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-tech-orange rounded-full border-t-transparent animate-spin"></div>
+                </div>
+
+                <div class="order-1 lg:order-2">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 font-rajdhani uppercase">Global <span class="text-tech-cyan">Logistics Network</span></h2>
+                    <p class="text-gray-400 text-md mb-8 font-inter leading-relaxed">
+                        Our logistics division operates with military precision, offering a diverse range of tactical transport services tailored to secure and efficient supply chain management.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-sm">
+                        <!-- Tech List Items -->
+                        <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-cyan transition-colors">
+                            <span class="text-tech-cyan">>></span> Less Than Truckload
+                        </div>
+                        <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-orange transition-colors">
+                            <span class="text-tech-orange">>></span> Rail Freight Shipping
+                        </div>
+                        <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-cyan transition-colors">
+                            <span class="text-tech-cyan">>></span> Hot Shot Trucking
+                        </div>
+                        <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-orange transition-colors">
+                            <span class="text-tech-orange">>></span> Freight Forwarding
+                        </div>
+                        <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-cyan transition-colors">
+                            <span class="text-tech-cyan">>></span> Container Freight
+                        </div>
+                         <div class="flex items-center gap-3 text-gray-300 hud-panel p-3 border-l-2 border-transparent hover:border-tech-orange transition-colors">
+                            <span class="text-tech-orange">>></span> Air Cargo Drops
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="our-services" class="py-24 px-6 relative z-10">
+            <div class="max-w-[90rem] mx-auto reveal">
+                
+                <div class="mb-10 flex flex-col md:flex-row justify-between items-end gap-6 border-b border-tech-border pb-6">
+                    <div>
+                        <h2 class="text-4xl md:text-5xl font-bold mb-2 font-rajdhani uppercase">Active <span class="text-tech-orange">Hardware</span> Profiles</h2>
+                        <p class="text-gray-400 font-mono text-xs uppercase tracking-widest">// Specialized equipment for extreme environments</p>
+                    </div>
+                    
+                    <!-- Thumbnails -->
+                    <div class="hidden lg:flex gap-3 z-30" id="carousel-thumbnails">
+                        <div class="w-20 h-14 bg-tech-panel border border-tech-cyan cursor-pointer transition-all thumb-item p-1 relative" onclick="goToSlide(0)">
+                            <div class="absolute -top-1 -right-1 w-2 h-2 bg-tech-cyan"></div>
+                            <img src="img/tr1.jpg" class="w-full h-full object-cover filter grayscale contrast-125">
+                        </div>
+                        <div class="w-20 h-14 bg-tech-panel border border-tech-border cursor-pointer transition-all thumb-item p-1 opacity-50 hover:border-gray-500" onclick="goToSlide(1)">
+                            <img src="img/tr2.jpg" class="w-full h-full object-cover filter grayscale contrast-125">
+                        </div>
+                        <div class="w-20 h-14 bg-tech-panel border border-tech-border cursor-pointer transition-all thumb-item p-1 opacity-50 hover:border-gray-500" onclick="goToSlide(2)">
+                            <img src="img/tr3.jpeg" class="w-full h-full object-cover filter grayscale contrast-125">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative w-full h-[550px] lg:h-[450px]">
+                    
+                    <!-- SLIDE 0 -->
+                    <div class="product-slide slide-active w-full h-full flex flex-col lg:flex-row gap-6" id="slide-0">
+                        <!-- Image Container with HUD -->
+                        <div class="w-full lg:w-[60%] h-[250px] lg:h-full relative hud-panel hud-corners p-2">
+                            <span></span>
+                            <div class="absolute top-4 left-4 text-tech-cyan font-mono text-xs z-20 bg-black/50 px-2">SYS.ID: MC-3009</div>
+                            <img src="img/tr1.jpg" alt="MC3009" class="w-full h-full object-cover border border-tech-border relative z-10 filter sepia-[.1] hue-rotate-[190deg]">
+                            <!-- Crosshair -->
+                            <div class="absolute inset-0 pointer-events-none z-20 flex justify-center items-center">
+                                <div class="w-8 h-px bg-tech-cyan/50"></div><div class="w-px h-8 bg-tech-cyan/50 absolute"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Text Data Box -->
+                        <div class="w-full lg:w-[40%] h-full hud-panel p-8 flex flex-col justify-center border-t-4 border-tech-cyan">
+                            <div class="text-tech-cyan text-sm font-mono mb-2 tracking-widest">[ SPECIFICATION DATA ]</div>
+                            <h3 class="text-3xl font-bold text-white mb-4 font-rajdhani uppercase">Heavy Duty Chocks<br>Model <span class="text-tech-orange">MC3009</span></h3>
+                            <p class="text-gray-400 text-sm font-inter leading-relaxed mb-8 flex-grow">
+                                Engineered specifically for mine support equipment such as lubrication trucks and heavy maintenance vehicles. Unmatched extreme durability in harsh environments. Subjected to extensive stress testing.
+                            </p>
+                            <a href="#" class="btn-secondary w-full py-3 text-center font-rajdhani font-bold tracking-widest text-sm uppercase">Access Blueprint -></a>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 1 -->
+                    <div class="product-slide slide-hidden w-full h-full flex flex-col lg:flex-row gap-6" id="slide-1">
+                        <div class="w-full lg:w-[60%] h-[250px] lg:h-full relative hud-panel hud-corners p-2">
+                            <span></span>
+                             <div class="absolute top-4 left-4 text-tech-orange font-mono text-xs z-20 bg-black/50 px-2">SYS.ID: MC-3010</div>
+                            <img src="img/tr2.jpg" alt="MC3010" class="w-full h-full object-cover border border-tech-border relative z-10 filter sepia-[.1] hue-rotate-[190deg]">
+                            <div class="absolute inset-0 pointer-events-none z-20 flex justify-center items-center">
+                                <div class="w-8 h-px bg-tech-orange/50"></div><div class="w-px h-8 bg-tech-orange/50 absolute"></div>
+                            </div>
+                        </div>
+                        <div class="w-full lg:w-[40%] h-full hud-panel p-8 flex flex-col justify-center border-t-4 border-tech-orange">
+                            <div class="text-tech-orange text-sm font-mono mb-2 tracking-widest">[ SPECIFICATION DATA ]</div>
+                            <h3 class="text-3xl font-bold text-white mb-4 font-rajdhani uppercase">Rapid Deploy Chocks<br>Model <span class="text-tech-cyan">MC3010</span></h3>
+                            <p class="text-gray-400 text-sm font-inter leading-relaxed mb-8 flex-grow">
+                                Manufactured with highly durable, lightweight materials specifically designed for rapid ground deployment without sacrificing structural integrity. Optimal for quick-response units.
+                            </p>
+                            <a href="#" class="btn-secondary w-full py-3 text-center font-rajdhani font-bold tracking-widest text-sm uppercase">Access Blueprint -></a>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 2 -->
+                    <div class="product-slide slide-hidden w-full h-full flex flex-col lg:flex-row gap-6" id="slide-2">
+                         <div class="w-full lg:w-[60%] h-[250px] lg:h-full relative hud-panel hud-corners p-2">
+                            <span></span>
+                            <div class="absolute top-4 left-4 text-white font-mono text-xs z-20 bg-tech-cyan/50 px-2">SYS.ID: MC-3011</div>
+                            <img src="img/tr3.jpeg" alt="MC3011" class="w-full h-full object-cover border border-tech-border relative z-10 filter sepia-[.1] hue-rotate-[190deg]">
+                             <div class="absolute inset-0 pointer-events-none z-20 flex justify-center items-center">
+                                <div class="w-8 h-px bg-white/50"></div><div class="w-px h-8 bg-white/50 absolute"></div>
+                            </div>
+                        </div>
+                        <div class="w-full lg:w-[40%] h-full hud-panel p-8 flex flex-col justify-center border-t-4 border-white">
+                            <div class="text-white text-sm font-mono mb-2 tracking-widest">[ SPECIFICATION DATA ]</div>
+                            <h3 class="text-3xl font-bold text-white mb-4 font-rajdhani uppercase">Ultra-Light Chocks<br>Model <span class="text-tech-orange">MC3011</span></h3>
+                            <p class="text-gray-400 text-sm font-inter leading-relaxed mb-8 flex-grow">
+                                The Checkers™ heavy-duty MC3011 wheel chocks weigh only 32 lbs, making them 24% lighter than the industry standard while maintaining max hold capacity. Aerospace-grade composite.
+                            </p>
+                            <a href="#" class="btn-secondary w-full py-3 text-center font-rajdhani font-bold tracking-widest text-sm uppercase">Access Blueprint -></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slider Progress Controls -->
+                <div class="flex justify-center mt-8 gap-4">
+                    <div class="w-16 h-1 bg-tech-border overflow-hidden cursor-pointer" onclick="goToSlide(0)">
+                        <div class="progress-bar-fill active" id="prog-0"></div>
+                    </div>
+                    <div class="w-16 h-1 bg-tech-border overflow-hidden cursor-pointer" onclick="goToSlide(1)">
+                        <div class="progress-bar-fill" id="prog-1"></div>
+                    </div>
+                    <div class="w-16 h-1 bg-tech-border overflow-hidden cursor-pointer" onclick="goToSlide(2)">
+                        <div class="progress-bar-fill" id="prog-2"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="glow-line-orange opacity-30"></div>
+
+        <section id="faq" class="py-24 px-6 relative z-10">
+            <div class="max-w-4xl mx-auto reveal">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-2 font-rajdhani uppercase">Knowledge <span class="text-tech-cyan">Base</span></h2>
+                    <p class="text-gray-400 font-mono text-sm">// Frequently accessed operational queries</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Tech Accordion Items -->
+                    <div class="hud-panel p-6 border-l-2 border-tech-orange cursor-pointer group hover:bg-tech-panel/80 transition-all">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-lg font-bold text-white font-rajdhani tracking-wider group-hover:text-tech-orange transition-colors">Q: What specific protocols do you execute?</h4>
+                            <span class="text-tech-orange font-mono">+</span>
+                        </div>
+                        <p class="text-gray-400 text-sm font-inter leading-relaxed pl-4 border-l border-tech-border">We specialize in advanced cleaning, paint removal, tactical coating (painting), new fabrication, and servicing of equipment across construction sites, mine sectors, and offshore rigs.</p>
+                    </div>
+                    
+                    <div class="hud-panel p-6 border-l-2 border-tech-cyan cursor-pointer group hover:bg-tech-panel/80 transition-all">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-lg font-bold text-white font-rajdhani tracking-wider group-hover:text-tech-cyan transition-colors">Q: Are your supply solutions global?</h4>
+                            <span class="text-tech-cyan font-mono">+</span>
+                        </div>
+                        <p class="text-gray-400 text-sm font-inter leading-relaxed pl-4 border-l border-tech-border">Affirmative. Our logistics division offers a comprehensive, unrestricted range of services engineered to meet unique deployment needs, including LTL, rail freight, and priority forwarding globally.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact" class="bg-tech-bg border-t-2 border-tech-orange shadow-[0_-5px_20px_rgba(249,115,22,0.2)] pt-16 pb-6 relative z-20">
+        <div class="max-w-[90rem] mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-12">
+            
+            <!-- Column 1: Logo & HQ Info -->
+            <div class="space-y-6 lg:col-span-1">
+                <img src="img/00.png.png" alt="S.C.I Logo" class="h-12 w-auto object-contain">
+                <div>
+                    <h3 class="text-white font-bold font-rajdhani tracking-widest text-lg mb-2">INDONESIA HQ</h3>
+                    <p class="text-gray-400 text-sm font-inter max-w-xs leading-relaxed">
+                        Jalan I Gusti Ngurah Rai Blok A1 No 6 Surabaya, Jawa Timur 60294 Indonesia
+                    </p>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <div class="w-8 h-8 border border-tech-orange rounded flex items-center justify-center text-tech-orange group-hover:bg-tech-orange group-hover:text-white transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        </div>
+                        <span class="text-gray-300 text-sm font-mono">+62 31 878 1868</span>
+                    </div>
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-8 h-8 border border-tech-orange rounded flex items-center justify-center text-tech-orange group-hover:bg-tech-orange group-hover:text-white transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <span class="text-gray-300 text-sm font-mono">info@soblastco-indonesia.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Secondary Contacts (From reference image format) -->
+            <div class="space-y-6 pt-0 lg:pt-[4.5rem]">
+                 <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                        <div class="w-8 h-8 border border-tech-orange rounded flex items-center justify-center text-tech-orange group-hover:bg-tech-orange group-hover:text-white transition-all">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        </div>
+                        <span class="text-gray-300 text-sm font-mono border-b border-tech-border pb-1">+61 475 778 173</span>
+                    </div>
+                    <div class="flex items-center gap-3 group cursor-pointer">
+                         <div class="w-8 h-8 border border-tech-orange rounded flex items-center justify-center text-tech-orange group-hover:bg-tech-orange group-hover:text-white transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <span class="text-gray-300 text-sm font-mono border-b border-tech-border pb-1">sales@soblastco-indonesia.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 3: Quick Links -->
+            <div>
+                <h3 class="text-tech-orange font-bold font-rajdhani text-lg mb-6 tracking-wide">Quick Links</h3>
+                <ul class="space-y-3">
+                    <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter flex items-center justify-between group">Company Profile <span class="w-1.5 h-1.5 rounded-full bg-tech-cyan opacity-0 group-hover:opacity-100 shadow-[0_0_5px_#06b6d4] transition-all"></span></a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter flex items-center justify-between group">Help Center <span class="w-1.5 h-1.5 rounded-full bg-tech-cyan opacity-0 group-hover:opacity-100 shadow-[0_0_5px_#06b6d4] transition-all"></span></a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter flex items-center justify-between group">Career <span class="w-1.5 h-1.5 rounded-full bg-tech-cyan opacity-0 group-hover:opacity-100 shadow-[0_0_5px_#06b6d4] transition-all"></span></a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter flex items-center justify-between group">Plans & Pricing <span class="w-1.5 h-1.5 rounded-full bg-tech-cyan opacity-0 group-hover:opacity-100 shadow-[0_0_5px_#06b6d4] transition-all"></span></a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter flex items-center justify-between group">News & Blog <span class="w-1.5 h-1.5 rounded-full bg-tech-cyan opacity-0 group-hover:opacity-100 shadow-[0_0_5px_#06b6d4] transition-all"></span></a></li>
+                </ul>
+            </div>
+
+            <!-- Column 4: Services & Socials -->
+            <div class="flex justify-between lg:justify-start lg:gap-16">
+                <div>
+                    <h3 class="text-tech-orange font-bold font-rajdhani text-lg mb-6 tracking-wide">Our Services</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter">Less Than Truckload</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter">Rail Freight Shipping</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter">Hot Shot Trucking</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter">Freight forwarding</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white text-sm font-inter">Container Freight</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Social Icons Panel (Rightmost) -->
+                <div class="flex flex-col gap-4">
+                    <a href="#" class="w-10 h-10 border border-tech-cyan rounded-lg flex items-center justify-center text-tech-cyan hover:bg-tech-cyan hover:text-tech-bg transition-colors shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 border border-tech-cyan rounded-lg flex items-center justify-center text-tech-cyan hover:bg-tech-cyan hover:text-tech-bg transition-colors shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2" stroke="currentColor" stroke-width="2"></circle></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 border border-tech-cyan rounded-lg flex items-center justify-center text-tech-cyan hover:bg-tech-cyan hover:text-tech-bg transition-colors shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-tech-cyan to-transparent opacity-50 mb-6"></div>
+
+        <div class="max-w-[90rem] mx-auto px-6 text-center lg:text-left">
+            <p class="text-gray-500 text-xs font-mono tracking-wide">© Copyright 2026. All Rights Reserved by Soblastco-Indonesia</p>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Company Journey Tab Logic
+        function switchTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(el => el.classList.add('hidden'));
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(el => {
+                // Reset to default tech outline style
+                el.classList.remove('border-tech-orange', 'bg-tech-orange/10', 'text-tech-orange', 'shadow-[inset_4px_0_0_#f97316]');
+                el.classList.add('border-tech-border', 'bg-transparent', 'text-gray-400');
+            });
+            
+            document.getElementById('content-' + tabId).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById('btn-' + tabId);
+            // Apply active tech style
+            activeBtn.classList.remove('border-tech-border', 'bg-transparent', 'text-gray-400');
+            activeBtn.classList.add('border-tech-orange', 'bg-tech-orange/10', 'text-tech-orange', 'shadow-[inset_4px_0_0_#f97316]');
+        }
+
+        // 2. Product Carousel Logic
+        let currentSlide = 0;
+        const totalSlides = 3;
+        let slideInterval;
+
+        function updateSliderUI() {
+            document.querySelectorAll('.product-slide').forEach((slide, index) => {
+                if(index === currentSlide) {
+                    slide.classList.remove('slide-hidden');
+                    slide.classList.add('slide-active');
+                } else {
+                    slide.classList.remove('slide-active');
+                    slide.classList.add('slide-hidden');
+                }
+            });
+
+            document.querySelectorAll('.thumb-item').forEach((thumb, index) => {
+                const indicator = thumb.querySelector('.bg-tech-cyan') || document.createElement('div');
+                
+                if(index === currentSlide) {
+                    thumb.classList.remove('border-tech-border', 'opacity-50');
+                    thumb.classList.add('border-tech-cyan', 'opacity-100');
+                    
+                    // Add cyan dot indicator to active thumb
+                    indicator.className = 'absolute -top-1 -right-1 w-2 h-2 bg-tech-cyan shadow-[0_0_5px_#06b6d4]';
+                    if(!thumb.querySelector('.bg-tech-cyan')) thumb.appendChild(indicator);
+                } else {
+                    thumb.classList.remove('border-tech-cyan', 'opacity-100');
+                    thumb.classList.add('border-tech-border', 'opacity-50');
+                    if(thumb.querySelector('.bg-tech-cyan')) thumb.removeChild(thumb.querySelector('.bg-tech-cyan'));
+                }
+            });
+
+            document.querySelectorAll('.progress-bar-fill').forEach((bar, index) => {
+                bar.classList.remove('active');
+                void bar.offsetWidth; 
+                if(index === currentSlide) {
+                    bar.classList.add('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateSliderUI();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSliderUI();
+            resetInterval();
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000); 
+        }
+
+        // 3. Scroll Reveal & Numbers 
+        document.addEventListener("DOMContentLoaded", () => {
+            resetInterval();
+            updateSliderUI();
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("active");
+                        
+                        const counters = entry.target.querySelectorAll('.counter');
+                        counters.forEach(counter => {
+                            if (!counter.classList.contains('counted')) {
+                                counter.classList.add('counted');
+                                const target = +counter.getAttribute('data-target');
+                                const duration = 2000;
+                                const step = target / (duration / 16);
+                                let current = 0;
+                                
+                                const updateCounter = () => {
+                                    current += step;
+                                    if (current < target) {
+                                        counter.innerText = Math.ceil(current);
+                                        counter.animationId = requestAnimationFrame(updateCounter);
+                                    } else {
+                                        counter.innerText = target;
+                                    }
+                                };
+                                updateCounter();
+                            }
+                        });
+                    } else {
+                        entry.target.classList.remove("active");
+                        
+                        const counters = entry.target.querySelectorAll('.counter');
+                        counters.forEach(counter => {
+                            counter.classList.remove('counted');
+                            counter.innerText = "0";
+                            if (counter.animationId) {
+                                cancelAnimationFrame(counter.animationId); 
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll(".reveal").forEach((el) => {
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>
